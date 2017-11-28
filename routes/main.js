@@ -89,8 +89,12 @@ var isChecksumAddress = function (address) {
       var Acc = abiarticleContract.at(address);
       Acc.GetCount.call(function (error, Count){
       Acc.getArticle.call(Count-1,function(err, res){
-        var array=[{"title":res[0]},{"writer":res[1]},{"status":res[2]},{"source":res[3]},{"comment":res[4]},{"article":res[5]}]
-        res1.render('verify', {articles: array, ok:"This Article is Found in Blockchain -Original "});
+        if(res){
+          var array=[{"title":res[0]},{"writer":res[1]},{"status":res[2]},{"source":res[3]},{"comment":res[4]},{"article":res[5]}]
+          res1.render('verify', {articles: array, ok:"This Article is Found in Blockchain -Original "});
+        }else{
+          res1.render('verify', {articles: array, errors:"This Article is Not Found in Blockchain"});
+        }
       });
     })
     }
@@ -136,6 +140,47 @@ var cursor = db.collection('article').find(query);
   });
           });
 });
+
+router.get('/news',authenticationMiddleware(), function (req, res) {
+  var result = [];
+MongoClient.connect("mongodb://prerna_d:prerna_d@ds241065.mlab.com:41065/truthchain", function(err, db) {
+var cursor = db.collection('als').find({});
+  cursor.forEach(function(doc, err) {
+    result.push(doc);
+  }, function() {
+    db.close();
+        res.render('news', {articles: result});
+  });
+          });
+});
+router.post('/newsarticles/search',authenticationMiddleware(), function(req,res){
+  var result = [];
+MongoClient.connect("mongodb://prerna_d:prerna_d@ds241065.mlab.com:41065/truthchain", function(err, db) {
+  var qselect = req.body.search_categories;
+  switch(qselect){
+    case 'title':
+    var query = { 'title': req.body.searchValue };
+    break;
+    case 'writer':
+    var query = { 'writer': req.body.searchValue };
+    break;
+    case 'status':
+    var query = { 'status': req.body.searchValue };
+    break;
+    case '':
+    var query = {};
+    break;
+  }
+var cursor = db.collection('als').find(query);
+  cursor.forEach(function(doc, err) {
+    result.push(doc);
+  }, function() {
+    db.close();
+        res.render('news', {articles: result});
+  });
+          });
+});
+
 
 passport.use(new LocalStrategy(
   function(username, password, done) {
@@ -216,7 +261,7 @@ router.post('/reviewer',authenticationMiddleware(), function (req, res1) {
               db.collection("article").update(myquery, newvalues );
       });
       io.sockets.on('connection',function(socket){
-      socket.emit('update', {address:contractAddress,status:status});
+      io.sockets.emit('update', {address:contractAddress,status:status});
       });
     res1.render('reviewer', {ok:'Successfully Reviewed article'});
     }
