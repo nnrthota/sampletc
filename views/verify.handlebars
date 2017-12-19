@@ -1,5 +1,13 @@
 <!--  Material Dashboard CSS    -->
 <link href="../assets/css/material-dashboard.css?v=1.2.0" rel="stylesheet" />
+<style>
+.div1 {
+float: left;
+}
+.div2 {
+float:right;
+}
+</style>
 <link href="../assets/css/custome.css" rel="stylesheet" />
     <div class="wrapper">
         <div class="sidebar" data-color="blue" data-image="../assets/img/sidebar-3.jpg">
@@ -124,15 +132,59 @@
                                       </div>
                                       </form>
                                       <hr>
+                                      {{#each articles}}
                                       <div class="row">
+                                        <div class="row">
+                                        <div class="col-md-4">
+                                        <div class="card card-stats">
+                                            <div class="card-header" data-background-color="green">
+                                                <i class="material-icons">check_circle</i>
+                                            </div>
+                                            <div class="card-content">
+                                                <h4>{{ this.true1 }}</h4>
+                                                <h3 class="title">
+                                                <h4>Votes 4 Genuine</h4>
+                                                </h3>
+                                            </div>
+                                        </div>
+                                      </div>
+                                      <div class="col-md-4">
+                                      <div class="card card-stats">
+                                          <div class="card-header" data-background-color="red">
+                                              <i class="material-icons">warning</i>
+                                          </div>
+                                          <div class="card-content">
+                                              <h4>{{ this.false1 }}</h4>
+                                              <h3 class="title">
+                                              <h4>Votes 4 Fake</h4>
+                                              </h3>
+                                          </div>
+                                      </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                    <div class="card card-stats">
+                                        <div class="card-header" data-background-color="orange">
+                                            <i class="material-icons">perm_device_information</i>
+                                        </div>
+                                        <div class="card-content">
+                                            <div>
+                                              {{#is this.status "Verified - True"}}
+                                              <div class="div2" style="color:green"><i class="material-icons">check_circle</i></div>
+                                               {{/is}}
+                                               {{#is this.status "Verified - False"}}
+                                              <div class="div2" style="color:red"><i class="material-icons">warning</i></div>
+                                              {{/is}}
+                                              <div class="div1"><h3>{{this.status}}</h3></div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                  </div>
+                                    </div>
                                       <div class="col-md-12">
                                         <div class="form-group label-floating">
                                             <h4 class="control-label" rel="tooltip" title="title" style="color:red;"><i class="material-icons">subtitles</i></h4>
-                                            <ul>
-                                            {{#each articles}}
                                               <h4>{{ this.title }}</h4>
-                                            {{/each}}
-                                          </ul>
                                         </div>
                                       </div>
                                     </div>
@@ -140,31 +192,13 @@
                                         <div class="col-md-2">
                                             <div class="form-group label-floating">
                                                 <h4 class="control-label" rel="tooltip" title="Writer" style="color:red;"><i class="material-icons">person</i></h4>
-                                                <ul>
-                                                {{#each articles}}
                                                   <h4>{{ this.writer }}</h4>
-                                                {{/each}}
-                                              </ul>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <div class="form-group label-floating">
-                                                <h4 class="control-label" rel="tooltip" title="status" style="color:red;"><i class="material-icons">hourglass_empty</i></h4>
-                                                <ul>
-                                                {{#each articles}}
-                                                  <h4>{{ this.status }}</h4>
-                                                {{/each}}
-                                              </ul>
                                             </div>
                                         </div>
                                         <div class="col-md-8">
                                             <div class="form-group label-floating">
                                                 <h4 class="control-label" rel="tooltip" title="source" style="color:red;"><i class="material-icons">open_in_browser</i></h4>
-                                                <ul>
-                                                {{#each articles}}
                                                   <h4>{{ this.source }}</h4>
-                                                {{/each}}
-                                              </ul>
                                             </div>
                                         </div>
                                     </div>
@@ -174,11 +208,7 @@
                                             <div class="form-group">
                                                 <h4 rel="tooltip" title="comment" style="color:red;"><i class="material-icons">comment</i></h4>
                                                 <div class="form-group label-floating">
-                                                  <ul>
-                                                  {{#each articles}}
                                                     <h4>{{ this.comment }}</h4>
-                                                  {{/each}}
-                                                </ul>
                                                 </div>
                                             </div>
                                         </div>
@@ -189,11 +219,8 @@
                                             <div class="form-group">
                                                 <h4 rel="tooltip" title="article" style="color:red;"><i class="material-icons">assignment</i></h4>
                                                 <div class="form-group label-floating">
-                                                  <ul>
-                                                  {{#each articles}}
                                                     <h4>{{{ this.article }}}</h4>
                                                   {{/each}}
-                                                </ul>
                                                 </div>
                                             </div>
                                         </div>

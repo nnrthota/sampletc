@@ -22,7 +22,17 @@ router.get('/', function (req, res) {
    res.render( 'login');
 })
 router.get('/verify', authenticationMiddleware(), function (req, res) {
-   res.render( 'verify');
+   res.render( 'verify',{
+   helpers: {
+       is: function (a, b, opts) {
+         if (a == b) {
+           return opts.fn(this)
+           } else {
+       return opts.inverse(this)
+       }
+     }
+   }
+ });
 })
 router.get('/dashboard',authenticationMiddleware(), function (req, res) {
     var result=[];
@@ -47,7 +57,6 @@ router.get('/writer',authenticationMiddleware(), function (req, res) {
 router.get('/reviewer',authenticationMiddleware(), function (req, res) {
    res.render( 'reviewer');
 })
-
 router.post('/verify', authenticationMiddleware(), function (req, res1) {
   req.checkBody('contractAddress', 'contractAddress field cannot be empty').notEmpty();
   const errors = req.validationErrors();
@@ -85,13 +94,26 @@ var isChecksumAddress = function (address) {
       res1.render('verify', {errors:"This is not valid Article contract Address"});
     }else{
       var address = req.body.contractAddress;
-          abiarticleContract = web3.eth.contract([{"constant":false,"inputs":[],"name":"GetCount","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"title","type":"string"},{"name":"writer","type":"string"},{"name":"status1","type":"string"},{"name":"source1","type":"string"},{"name":"comment","type":"string"},{"name":"article","type":"string"}],"name":"addNewArticle","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"}],"name":"getArticle","outputs":[{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"},{"name":"status1","type":"string"}],"name":"updateArticle","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}]);
+          abiarticleContract = web3.eth.contract([{"constant":false,"inputs":[],"name":"GetCount","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"rwTvote","type":"uint8"},{"name":"rwFvote","type":"uint8"},{"name":"title","type":"string"},{"name":"writer","type":"string"},{"name":"status1","type":"string"},{"name":"source1","type":"string"},{"name":"comment","type":"string"},{"name":"article","type":"string"}],"name":"addNewArticle","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"}],"name":"getArticle","outputs":[{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"}],"name":"getVotes","outputs":[{"name":"","type":"int256"},{"name":"","type":"int256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"},{"name":"rwFvote","type":"uint8"}],"name":"updateFVotes","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"},{"name":"rwTvote","type":"uint8"}],"name":"updateTVotes","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"},{"name":"status1","type":"string"}],"name":"updateStatus","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}]);
       var Acc = abiarticleContract.at(address);
       Acc.GetCount.call(function (error, Count){
       Acc.getArticle.call(Count-1,function(err, res){
         if(res){
-          var array=[{"title":res[0]},{"writer":res[1]},{"status":res[2]},{"source":res[3]},{"comment":res[4]},{"article":res[5]}]
-          res1.render('verify', {articles: array, ok:"This Article is Found in Blockchain -Original "});
+          Acc.getVotes.call(Count-1,function(err, votes){
+          var array=[{"true1":votes[0], "false1":votes[1], "title":res[0],"writer":res[1],"status":res[2],"source":res[3],"comment":res[4],"article":res[5]}]
+          res1.render('verify', {articles: array,
+              helpers: {
+                  is: function (a, b, opts) {
+                    if (a == b) {
+                      return opts.fn(this)
+                      } else {
+                  return opts.inverse(this)
+                  }
+                }
+              },
+              ok:"This Article is Found in Blockchain -Original"
+           });
+        });
         }else{
           res1.render('verify', {articles: array, errors:"This Article is Not Found in Blockchain"});
         }
@@ -109,7 +131,18 @@ var cursor = db.collection('article').find({});
     result.push(doc);
   }, function() {
     db.close();
-        res.render('reader', {articles: result});
+    console.log(result)
+  res.render('reader', {articles: result,
+  helpers: {
+      is: function (a, b, opts) {
+        if (a == b) {
+          return opts.fn(this)
+          } else {
+      return opts.inverse(this)
+      }
+    }
+  }
+  });
   });
           });
 });
@@ -221,13 +254,13 @@ router.post('/login',passport.authenticate('local', {successRedirect:'/dashboard
 
 router.post('/reviewer',authenticationMiddleware(), function (req, res1) {
   req.checkBody('contractAddress', 'contractAddress field cannot be empty').notEmpty();
-  req.checkBody('status', 'status field cannot be empty').notEmpty();
+  req.checkBody('votes', 'Please Select True|False ').notEmpty();
   const errors = req.validationErrors();
   if(errors){
   res1.render('reviewer', {errors:"Please check all fields"});
   }else{
   var contractAddress = req.body.contractAddress;
-  var status = req.body.status;
+  var votes = req.body.votes;
   MongoClient.connect(url, function(err, db){
   var AccContract = web3.eth.contract([{"constant":false,"inputs":[],"name":"GetCount","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"fullIdentity","type":"string"},{"name":"email","type":"string"},{"name":"password","type":"string"},{"name":"role","type":"string"}],"name":"newAccount","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"}],"name":"getAccount","outputs":[{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"}],"payable":false,"stateMutability":"nonpayable","type":"function"}]);
 
@@ -245,27 +278,91 @@ router.post('/reviewer',authenticationMiddleware(), function (req, res1) {
   Acc.getAccount.call(Count-1,function(err, res){
   var entity = new String('reviewer');
   if(  new String(res[3]).valueOf() === entity.valueOf()){
-    abiarticleContract = web3.eth.contract([{"constant":false,"inputs":[],"name":"GetCount","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"title","type":"string"},{"name":"writer","type":"string"},{"name":"status1","type":"string"},{"name":"source1","type":"string"},{"name":"comment","type":"string"},{"name":"article","type":"string"}],"name":"addNewArticle","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"}],"name":"getArticle","outputs":[{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"},{"name":"status1","type":"string"}],"name":"updateArticle","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}]);
+    abiarticleContract = web3.eth.contract([{"constant":false,"inputs":[],"name":"GetCount","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"rwTvote","type":"uint8"},{"name":"rwFvote","type":"uint8"},{"name":"title","type":"string"},{"name":"writer","type":"string"},{"name":"status1","type":"string"},{"name":"source1","type":"string"},{"name":"comment","type":"string"},{"name":"article","type":"string"}],"name":"addNewArticle","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"}],"name":"getArticle","outputs":[{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"}],"name":"getVotes","outputs":[{"name":"","type":"int256"},{"name":"","type":"int256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"},{"name":"rwFvote","type":"uint8"}],"name":"updateFVotes","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"},{"name":"rwTvote","type":"uint8"}],"name":"updateTVotes","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"},{"name":"status1","type":"string"}],"name":"updateStatus","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}]);
 
     var articleContract = abiarticleContract.at(contractAddress);
   articleContract.GetCount.call(function (error, Count){
-  articleContract.updateArticle(Count-1, status, {from:coinbase, gas: 4712388,
-  gasPrice: 100000000000}, function(error){
-  if(error){
-     res1.render('reviewer', {errors:'Error While updating article'});
-  }else {
-    MongoClient.connect(url, function(err, db) {
-              if (err) throw err;
-              var myquery = { "contractAddress": contractAddress };
-              var newvalues =  {$set:{ "status":status} };
-              db.collection("article").update(myquery, newvalues );
-      });
-      io.sockets.on('connection',function(socket){
-      io.sockets.emit('update', {address:contractAddress,status:status});
-      });
-    res1.render('reviewer', {ok:'Successfully Reviewed article'});
+    if(votes==new String('true')){
+      articleContract.getVotes.call(function (error, votesTF){
+      articleContract.updateTVotes(Count-1, votesTF[0].toNumber()+1, {from:coinbase, gas: 4712388,
+      gasPrice: 100000000000}, function(error){
+      if(error){
+         res1.render('reviewer', {errors:'Error While updating article'});
+      }else {
+        MongoClient.connect(url, function(err, db) {
+                  if (err) throw err;
+                  var myquery = { "contractAddress": contractAddress };
+                  var newvalues =  {$set:{ "true1":votesTF[0].toNumber()+1} };
+                  db.collection("article").update(myquery, newvalues );
+          });
+          io.sockets.on('connection',function(socket){
+          io.sockets.emit('true', {address:contractAddress,true1:votesTF[0].toNumber()+1});
+          });
+          vote() //Imp callbacks
+        res1.render('reviewer', {ok:'Thank You!! Successfully Updated Your Vote'});
+        }
+      })
+    })
+    }else{
+      articleContract.getVotes.call(function (error, votesTF){
+      articleContract.updateFVotes(Count-1, votesTF[1].toNumber()+1, {from:coinbase, gas: 4712388,
+      gasPrice: 100000000000}, function(error){
+      if(error){
+         res1.render('reviewer', {errors:'Error While updating article'});
+      }else {
+        MongoClient.connect(url, function(err, db) {
+                  if (err) throw err;
+                  var myquery = { "contractAddress": contractAddress };
+                  var newvalues =  {$set:{ "false1":votesTF[1].toNumber()+1} };
+                  db.collection("article").update(myquery, newvalues );
+          });
+          io.sockets.on('connection',function(socket){
+          io.sockets.emit('false', {address:contractAddress,false1:votesTF[1].toNumber()+1});
+          });
+          vote()
+        res1.render('reviewer', {ok:'Thank You!! Successfully Updated Your Vote'});
+        }
+      })
+    })
+    }
+    function vote(){
+    articleContract.getVotes.call(function (error, votesTF){
+      console.log(votesTF[0].toNumber())
+    if(votesTF[0].toNumber()==3){
+      articleContract.updateStatus(Count-1, "Verified - True", {from:coinbase, gas: 4712388,
+      gasPrice: 100000000000}, function(error){
+      if(error){
+         res1.render('reviewer', {errors:'Error While updating article'});
+      }else {
+        MongoClient.connect(url, function(err, db) {
+                  if (err) throw err;
+                  var myquery = { "contractAddress": contractAddress };
+                  var newvalues =  {$set:{ "status":"Verified - True"} };
+                  db.collection("article").update(myquery, newvalues );
+          });
+        }
+      })
     }
   })
+  articleContract.getVotes.call(function (error, votesTF){
+    console.log(votesTF[0].toNumber())
+    if(votesTF[1].toNumber()==3){
+      articleContract.updateStatus(Count-1, "Verified - False", {from:coinbase, gas: 4712388,
+      gasPrice: 100000000000}, function(error){
+      if(error){
+         res1.render('reviewer', {errors:'Error While updating article'});
+      }else {
+        MongoClient.connect(url, function(err, db) {
+                  if (err) throw err;
+                  var myquery = { "contractAddress": contractAddress };
+                  var newvalues =  {$set:{ "status":"Verified - False"} };
+                  db.collection("article").update(myquery, newvalues );
+          });
+        }
+      })
+    }
+  })
+}
 });
 }else{
     res1.render('reviewer', {errors:'You dont have privilage to update article'});
@@ -279,9 +376,9 @@ router.post('/reviewer',authenticationMiddleware(), function (req, res1) {
 
 router.post('/article',authenticationMiddleware(), function (req, res1) {
   req.checkBody('writerName', 'writerName field cannot be empty').notEmpty();
-  req.checkBody('status', 'status field cannot be empty').notEmpty();
   req.checkBody('source', 'source field cannot be empty').notEmpty();
   req.checkBody('createarticle', 'article field cannot be empty').notEmpty();
+  req.checkBody('comment', 'Comment field cannot be empty').notEmpty();
   const errors = req.validationErrors();
   if(errors){
   res1.render('writer', {errors:"Please check all fields"});
@@ -308,9 +405,9 @@ router.post('/article',authenticationMiddleware(), function (req, res1) {
   Acc.getAccount.call(Count-1,function(err, res){
   var writer = new String('writer');
   if(  new String(res[3]).valueOf() === writer.valueOf()){
-    abiarticleContract = web3.eth.contract([{"constant":false,"inputs":[],"name":"GetCount","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"title","type":"string"},{"name":"writer","type":"string"},{"name":"status1","type":"string"},{"name":"source1","type":"string"},{"name":"comment","type":"string"},{"name":"article","type":"string"}],"name":"addNewArticle","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"}],"name":"getArticle","outputs":[{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"},{"name":"status1","type":"string"}],"name":"updateArticle","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}]);
+    abiarticleContract = web3.eth.contract([{"constant":false,"inputs":[],"name":"GetCount","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"rwTvote","type":"uint8"},{"name":"rwFvote","type":"uint8"},{"name":"title","type":"string"},{"name":"writer","type":"string"},{"name":"status1","type":"string"},{"name":"source1","type":"string"},{"name":"comment","type":"string"},{"name":"article","type":"string"}],"name":"addNewArticle","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"}],"name":"getArticle","outputs":[{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"}],"name":"getVotes","outputs":[{"name":"","type":"int256"},{"name":"","type":"int256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"},{"name":"rwFvote","type":"uint8"}],"name":"updateFVotes","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"},{"name":"rwTvote","type":"uint8"}],"name":"updateTVotes","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"CountNo","type":"uint8"},{"name":"status1","type":"string"}],"name":"updateStatus","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}]);
 
-articleCode=("60606040526000600160006101000a81548160ff021916908360ff160217905550341561002b57600080fd5b610da28061003a6000396000f300606060405260043610610062576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff1680630ab93971146100675780631b6e9558146100965780632553455d14610242578063ad2e3ceb146104fd575b600080fd5b341561007257600080fd5b61007a610566565b604051808260ff1660ff16815260200191505060405180910390f35b34156100a157600080fd5b610240600480803590602001908201803590602001908080601f0160208091040260200160405190810160405280939291908181526020018383808284378201915050505050509190803590602001908201803590602001908080601f0160208091040260200160405190810160405280939291908181526020018383808284378201915050505050509190803590602001908201803590602001908080601f0160208091040260200160405190810160405280939291908181526020018383808284378201915050505050509190803590602001908201803590602001908080601f0160208091040260200160405190810160405280939291908181526020018383808284378201915050505050509190803590602001908201803590602001908080601f0160208091040260200160405190810160405280939291908181526020018383808284378201915050505050509190803590602001908201803590602001908080601f0160208091040260200160405190810160405280939291908181526020018383808284378201915050505050509190505061057d565b005b341561024d57600080fd5b610266600480803560ff169060200190919050506106f4565b6040518080602001806020018060200180602001806020018060200187810387528d818151815260200191508051906020019080838360005b838110156102ba57808201518184015260208101905061029f565b50505050905090810190601f1680156102e75780820380516001836020036101000a031916815260200191505b5087810386528c818151815260200191508051906020019080838360005b83811015610320578082015181840152602081019050610305565b50505050905090810190601f16801561034d5780820380516001836020036101000a031916815260200191505b5087810385528b818151815260200191508051906020019080838360005b8381101561038657808201518184015260208101905061036b565b50505050905090810190601f1680156103b35780820380516001836020036101000a031916815260200191505b5087810384528a818151815260200191508051906020019080838360005b838110156103ec5780820151818401526020810190506103d1565b50505050905090810190601f1680156104195780820380516001836020036101000a031916815260200191505b50878103835289818151815260200191508051906020019080838360005b83811015610452578082015181840152602081019050610437565b50505050905090810190601f16801561047f5780820380516001836020036101000a031916815260200191505b50878103825288818151815260200191508051906020019080838360005b838110156104b857808201518184015260208101905061049d565b50505050905090810190601f1680156104e55780820380516001836020036101000a031916815260200191505b509c5050505050505050505050505060405180910390f35b341561050857600080fd5b610564600480803560ff1690602001909190803590602001908201803590602001908080601f01602080910402602001604051908101604052809392919081815260200183838082843782019150505050505091905050610b71565b005b6000600160009054906101000a900460ff16905090565b610585610bbf565b868160000181905250858160200181905250848160400181905250838160600181905250828160800181905250818160a00181905250428160c0018181525050428160e001818152505080600080600160009054906101000a900460ff1660ff1681526020019081526020016000206000820151816000019080519060200190610610929190610c29565b50602082015181600101908051906020019061062d929190610c29565b50604082015181600201908051906020019061064a929190610c29565b506060820151816003019080519060200190610667929190610c29565b506080820151816004019080519060200190610684929190610c29565b5060a08201518160050190805190602001906106a1929190610c29565b5060c0820151816006015560e082015181600701559050506001600081819054906101000a900460ff168092919060010191906101000a81548160ff021916908360ff1602179055505050505050505050565b6106fc610ca9565b610704610ca9565b61070c610ca9565b610714610ca9565b61071c610ca9565b610724610ca9565b6000808860ff1681526020019081526020016000206000016000808960ff1681526020019081526020016000206001016000808a60ff1681526020019081526020016000206002016000808b60ff1681526020019081526020016000206003016000808c60ff1681526020019081526020016000206004016000808d60ff168152602001908152602001600020600501858054600181600116156101000203166002900480601f0160208091040260200160405190810160405280929190818152602001828054600181600116156101000203166002900480156108495780601f1061081e57610100808354040283529160200191610849565b820191906000526020600020905b81548152906001019060200180831161082c57829003601f168201915b50505050509550848054600181600116156101000203166002900480601f0160208091040260200160405190810160405280929190818152602001828054600181600116156101000203166002900480156108e55780601f106108ba576101008083540402835291602001916108e5565b820191906000526020600020905b8154815290600101906020018083116108c857829003601f168201915b50505050509450838054600181600116156101000203166002900480601f0160208091040260200160405190810160405280929190818152602001828054600181600116156101000203166002900480156109815780601f1061095657610100808354040283529160200191610981565b820191906000526020600020905b81548152906001019060200180831161096457829003601f168201915b50505050509350828054600181600116156101000203166002900480601f016020809104026020016040519081016040528092919081815260200182805460018160011615610100020316600290048015610a1d5780601f106109f257610100808354040283529160200191610a1d565b820191906000526020600020905b815481529060010190602001808311610a0057829003601f168201915b50505050509250818054600181600116156101000203166002900480601f016020809104026020016040519081016040528092919081815260200182805460018160011615610100020316600290048015610ab95780601f10610a8e57610100808354040283529160200191610ab9565b820191906000526020600020905b815481529060010190602001808311610a9c57829003601f168201915b50505050509150808054600181600116156101000203166002900480601f016020809104026020016040519081016040528092919081815260200182805460018160011615610100020316600290048015610b555780601f10610b2a57610100808354040283529160200191610b55565b820191906000526020600020905b815481529060010190602001808311610b3857829003601f168201915b5050505050905095509550955095509550955091939550919395565b806000808460ff1681526020019081526020016000206002019080519060200190610b9d929190610cbd565b50426000808460ff168152602001908152602001600020600701819055505050565b61010060405190810160405280610bd4610d3d565b8152602001610be1610d3d565b8152602001610bee610d3d565b8152602001610bfb610d3d565b8152602001610c08610d3d565b8152602001610c15610d3d565b815260200160008152602001600081525090565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f10610c6a57805160ff1916838001178555610c98565b82800160010185558215610c98579182015b82811115610c97578251825591602001919060010190610c7c565b5b509050610ca59190610d51565b5090565b602060405190810160405280600081525090565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f10610cfe57805160ff1916838001178555610d2c565b82800160010185558215610d2c579182015b82811115610d2b578251825591602001919060010190610d10565b5b509050610d399190610d51565b5090565b602060405190810160405280600081525090565b610d7391905b80821115610d6f576000816000905550600101610d57565b5090565b905600a165627a7a7230582093d5749acc971b0490d15605d1ee9d3ec44b21c903a56bcb830e3c48b9f8d4fb0029");
+articleCode=("60606040526000600160006101000a81548160ff021916908360ff160217905550341561002b57600080fd5b610fce8061003a6000396000f300606060405260043610610083576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff1680630ab93971146100885780630da8ac65146100b75780632553455d1461027b5780638953bb7214610536578063abaf7fe814610577578063abe2e79d146105a9578063c6a87bc0146105db575b600080fd5b341561009357600080fd5b61009b610644565b604051808260ff1660ff16815260200191505060405180910390f35b34156100c257600080fd5b610279600480803560ff1690602001909190803560ff1690602001909190803590602001908201803590602001908080601f0160208091040260200160405190810160405280939291908181526020018383808284378201915050505050509190803590602001908201803590602001908080601f0160208091040260200160405190810160405280939291908181526020018383808284378201915050505050509190803590602001908201803590602001908080601f0160208091040260200160405190810160405280939291908181526020018383808284378201915050505050509190803590602001908201803590602001908080601f0160208091040260200160405190810160405280939291908181526020018383808284378201915050505050509190803590602001908201803590602001908080601f0160208091040260200160405190810160405280939291908181526020018383808284378201915050505050509190803590602001908201803590602001908080601f0160208091040260200160405190810160405280939291908181526020018383808284378201915050505050509190505061065b565b005b341561028657600080fd5b61029f600480803560ff1690602001909190505061083e565b6040518080602001806020018060200180602001806020018060200187810387528d818151815260200191508051906020019080838360005b838110156102f35780820151818401526020810190506102d8565b50505050905090810190601f1680156103205780820380516001836020036101000a031916815260200191505b5087810386528c818151815260200191508051906020019080838360005b8381101561035957808201518184015260208101905061033e565b50505050905090810190601f1680156103865780820380516001836020036101000a031916815260200191505b5087810385528b818151815260200191508051906020019080838360005b838110156103bf5780820151818401526020810190506103a4565b50505050905090810190601f1680156103ec5780820380516001836020036101000a031916815260200191505b5087810384528a818151815260200191508051906020019080838360005b8381101561042557808201518184015260208101905061040a565b50505050905090810190601f1680156104525780820380516001836020036101000a031916815260200191505b50878103835289818151815260200191508051906020019080838360005b8381101561048b578082015181840152602081019050610470565b50505050905090810190601f1680156104b85780820380516001836020036101000a031916815260200191505b50878103825288818151815260200191508051906020019080838360005b838110156104f15780820151818401526020810190506104d6565b50505050905090810190601f16801561051e5780820380516001836020036101000a031916815260200191505b509c5050505050505050505050505060405180910390f35b341561054157600080fd5b61055a600480803560ff16906020019091905050610cbb565b604051808381526020018281526020019250505060405180910390f35b341561058257600080fd5b6105a7600480803560ff1690602001909190803560ff16906020019091905050610d1f565b005b34156105b457600080fd5b6105d9600480803560ff1690602001909190803560ff16906020019091905050610d54565b005b34156105e657600080fd5b610642600480803560ff1690602001909190803590602001908201803590602001908080601f01602080910402602001604051908101604052809392919081815260200183838082843782019150505050505091905050610d89565b005b6000600160009054906101000a900460ff16905090565b610663610dd7565b888160c0019060ff16908160ff1681525050878160e0019060ff16908160ff1681525050868160000181905250858160200181905250848160400181905250838160600181905250828160800181905250818160a001819052504281610100018181525050428161012001818152505080600080600160009054906101000a900460ff1660ff1681526020019081526020016000206000820151816000019080519060200190610714929190610e55565b506020820151816001019080519060200190610731929190610e55565b50604082015181600201908051906020019061074e929190610e55565b50606082015181600301908051906020019061076b929190610e55565b506080820151816004019080519060200190610788929190610e55565b5060a08201518160050190805190602001906107a5929190610e55565b5060c08201518160060160006101000a81548160ff021916908360ff16021790555060e08201518160060160016101000a81548160ff021916908360ff160217905550610100820151816007015561012082015181600801559050506001600081819054906101000a900460ff168092919060010191906101000a81548160ff021916908360ff16021790555050505050505050505050565b610846610ed5565b61084e610ed5565b610856610ed5565b61085e610ed5565b610866610ed5565b61086e610ed5565b6000808860ff1681526020019081526020016000206000016000808960ff1681526020019081526020016000206001016000808a60ff1681526020019081526020016000206002016000808b60ff1681526020019081526020016000206003016000808c60ff1681526020019081526020016000206004016000808d60ff168152602001908152602001600020600501858054600181600116156101000203166002900480601f0160208091040260200160405190810160405280929190818152602001828054600181600116156101000203166002900480156109935780601f1061096857610100808354040283529160200191610993565b820191906000526020600020905b81548152906001019060200180831161097657829003601f168201915b50505050509550848054600181600116156101000203166002900480601f016020809104026020016040519081016040528092919081815260200182805460018160011615610100020316600290048015610a2f5780601f10610a0457610100808354040283529160200191610a2f565b820191906000526020600020905b815481529060010190602001808311610a1257829003601f168201915b50505050509450838054600181600116156101000203166002900480601f016020809104026020016040519081016040528092919081815260200182805460018160011615610100020316600290048015610acb5780601f10610aa057610100808354040283529160200191610acb565b820191906000526020600020905b815481529060010190602001808311610aae57829003601f168201915b50505050509350828054600181600116156101000203166002900480601f016020809104026020016040519081016040528092919081815260200182805460018160011615610100020316600290048015610b675780601f10610b3c57610100808354040283529160200191610b67565b820191906000526020600020905b815481529060010190602001808311610b4a57829003601f168201915b50505050509250818054600181600116156101000203166002900480601f016020809104026020016040519081016040528092919081815260200182805460018160011615610100020316600290048015610c035780601f10610bd857610100808354040283529160200191610c03565b820191906000526020600020905b815481529060010190602001808311610be657829003601f168201915b50505050509150808054600181600116156101000203166002900480601f016020809104026020016040519081016040528092919081815260200182805460018160011615610100020316600290048015610c9f5780601f10610c7457610100808354040283529160200191610c9f565b820191906000526020600020905b815481529060010190602001808311610c8257829003601f168201915b5050505050905095509550955095509550955091939550919395565b6000806000808460ff16815260200190815260200160002060060160009054906101000a900460ff166000808560ff16815260200190815260200160002060060160019054906101000a900460ff168160ff1691508060ff16905091509150915091565b806000808460ff16815260200190815260200160002060060160016101000a81548160ff021916908360ff1602179055505050565b806000808460ff16815260200190815260200160002060060160006101000a81548160ff021916908360ff1602179055505050565b806000808460ff1681526020019081526020016000206002019080519060200190610db5929190610ee9565b50426000808460ff168152602001908152602001600020600801819055505050565b61014060405190810160405280610dec610f69565b8152602001610df9610f69565b8152602001610e06610f69565b8152602001610e13610f69565b8152602001610e20610f69565b8152602001610e2d610f69565b8152602001600060ff168152602001600060ff16815260200160008152602001600081525090565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f10610e9657805160ff1916838001178555610ec4565b82800160010185558215610ec4579182015b82811115610ec3578251825591602001919060010190610ea8565b5b509050610ed19190610f7d565b5090565b602060405190810160405280600081525090565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f10610f2a57805160ff1916838001178555610f58565b82800160010185558215610f58579182015b82811115610f57578251825591602001919060010190610f3c565b5b509050610f659190610f7d565b5090565b602060405190810160405280600081525090565b610f9f91905b80821115610f9b576000816000905550600101610f83565b5090565b905600a165627a7a72305820e37d712aacc997a8b825e18151845c6a39bde856188a294e1bf724d75fd1861f0029");
 
 
 abiarticleContract.new("", {from:coinbase, data: articleCode, gas: 3000000},function(err, deployedContract){
@@ -319,7 +416,7 @@ abiarticleContract.new("", {from:coinbase, data: articleCode, gas: 3000000},func
           //console.log(deployedContract.transactionHash)
       } else {
           var articleContract = abiarticleContract.at(deployedContract.address);
-     articleContract.addNewArticle(title, writerName, status, source, comment, article, {from:coinbase, gas: 4712388,
+     articleContract.addNewArticle(0, 0, title, writerName, "Submited For Review", source, comment, article, {from:coinbase, gas: 4712388,
  gasPrice: 100000000000}, function(error){
        if(error){
            res1.render('writer', {errors:'Error While creating doctor',user:req.user});
@@ -328,9 +425,11 @@ abiarticleContract.new("", {from:coinbase, data: articleCode, gas: 3000000},func
                if (err) throw err;
                var myobj = {
                   contractAddress:deployedContract.address,
+                  true1:0,
+                  false1:0,
                   title:title,
                   writer: writerName,
-                  status: status,
+                  status: "Submited For Review",
                   source: source,
                   comment: comment,
                   article:article

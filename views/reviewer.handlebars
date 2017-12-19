@@ -1,3 +1,4 @@
+<link href="../assets/css/custome.css" rel="stylesheet" />
 <script src="/socket.io/socket.io.js"></script>
 <!--  Material Dashboard CSS    -->
 <link href="../assets/css/material-dashboard.css?v=1.2.0" rel="stylesheet" />
@@ -94,16 +95,19 @@
                                         <div class="row">
                                             <div class="col-md-9">
                                                 <div class="form-group label-floating">
-                                                    <label class="control-label">contractAddress</label>
+                                                    <label class="control-label">Paste "contractAddress" here</label>
                                                     <input type="text" name="contractAddress" class="form-control">
                                                 </div>
                                             </div>
-                                            <div class="col-md-3">
-                                                <div class="form-group label-floating">
-                                                    <label class="control-label">Status</label>
-                                                    <input type="text" name="status" class="form-control">
-                                                </div>
-                                            </div>
+                                            <div class="form-group col-md-3 is-empty">
+                                            <div class="select">
+                                            <select  name="votes" id="search_categories">
+                                            <option id="search_categories" value="" disabled="disabled" selected="selected">----Select----</option>
+                                            <option id="search_categories" value="true">True</option>
+                                            <option id="search_categories" value="false">False</option>
+                                          </select>
+                                          </div>
+                                        </div>
                                         </div>
                                         <button type="submit" class="btn btn-primary pull-right">Review</button>
                                         <div class="clearfix"></div>
@@ -132,7 +136,7 @@
                     <div class="col-md-8">
                         <div class="card">
                             <div class="card-header" data-background-color="purple">
-                                <h4 class="title">Latest Approved Article Boradcast to all users</h4>
+                                <h4 class="title">Latest Approved Article Broadcasted to all users</h4>
                                 <p class="category">This message is broadcasted to all users through websockets</p>
                             </div>
                             <div class="card-content">
@@ -210,20 +214,39 @@
 $(function() {
   var socket = io.connect();
   var $chat = $('#chat');
-  socket.on('update', function(data) {
+  socket.on('true', function(data) {
     console.log('adfadfadf'+data);
-      $chat.append('<table class="table table-bordered" style="color: red;">'+
+      $chat.append('<table class="table table-bordered" style="color: green;">'+
         '<thead>'+
             '<tr>'+
                 '<th>Artical_contractAddress</th>'+
-                '<th>Status</th>'+
+                '<th>True - Votes</th>'+
             '</tr>'+
         '</thead>'+
 
         '<tbody>'+
             '<tr>'+
                 '<td>'+data.address+'</td>'+
-                '<td>'+data.status+'</td>'+
+                '<td>'+data.true1+'</td>'+
+            '</tr>'+
+        '</thead>'+
+        '</table>');
+
+  });
+  socket.on('false', function(data) {
+    console.log('adfadfadf'+data);
+      $chat.append('<table class="table table-bordered" style="color: red;">'+
+        '<thead>'+
+            '<tr>'+
+                '<th>Artical_contractAddress</th>'+
+                '<th>False - Votes</th>'+
+            '</tr>'+
+        '</thead>'+
+
+        '<tbody>'+
+            '<tr>'+
+                '<td>'+data.address+'</td>'+
+                '<td>'+data.false1+'</td>'+
             '</tr>'+
         '</thead>'+
         '</table>');

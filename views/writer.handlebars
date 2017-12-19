@@ -108,7 +108,7 @@
                                             <div class="col-md-3">
                                                 <div class="form-group label-floating">
                                                     <label class="control-label">Status</label>
-                                                    <input type="text" name="status" class="form-control">
+                                                    <input type="text" name="status" value="Submitted For Review" disabled class="form-control">
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
@@ -155,9 +155,6 @@
                                     </p>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                            <a href="http://18.217.11.152:8080/truthchain" rel="tooltip" title="Do You Need Some Help Reg Articles ?" class="btn btn-info" role="button">Click here for Readymade-Articles</a>
-                            </div>
                             <div class="row">
                               {{#if errors}}
                                 <div id="prverror" style="text-align:center; color:red">
@@ -171,6 +168,38 @@
                                   <h4 class="alert alert-success" id="prvsuccess" role="alert" >{{ok}}</h4>
                                 </div>
                               {{/if}}
+                            </div>
+                            <div class="card card-profile">
+                            <div class="content">
+                                <h6 class="category text-gray">Auto Fetch Articles</h6>
+                                <h4 class="card-title" style="color:red">Ready Made Articles <br>(▼▼▼ Please Scroll Down ▼▼▼ )</h4>
+                                <p class="card-content">
+                                  <br>We propose another way to get Articles from different multimedia with out having stress on writer, Writer need to select articles from NEWS-Articles area and add comments on top of that then it will store on Blockchain.
+                                </p>
+                            </div>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="content">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-md-11">
+                            <div class="card card-plain">
+                                <div class="card-header" data-background-color="purple">
+                                    <h4 class="title">By NLP -newspaper Library</h4>
+                                    <p class="category">Auto fetch Articles by NLTK
+                                        <a target="_blank" href="http://18.217.11.152:8080/truthchain">Check here</a>
+                                    </p>
+                                </div>
+                                <div class="card-content">
+                                    <div class="iframe-container hidden-sm hidden-xs">
+                                        <iframe src="http://18.217.11.152:8080/truthchain">
+                                            <p>Your browser does not support iframes.</p>
+                                        </iframe>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -1,4 +1,12 @@
 <link href="../assets/css/material-dashboard.css?v=1.2.0" rel="stylesheet" />
+<style>
+.div1 {
+float: left;
+}
+.div2 {
+float:right;
+}
+</style>
 <link href="../assets/css/custome.css" rel="stylesheet" />
     <div class="wrapper">
         <div class="sidebar" data-color="red" data-image="../assets/img/sidebar-1.jpg">
@@ -109,6 +117,53 @@
                                 </div>
                                 <div class="card-content">
                                   <div class="row">
+                                  <div class="col-md-4">
+                                  <div class="card card-stats">
+                                      <div class="card-header" data-background-color="green">
+                                          <i class="material-icons">check_circle</i>
+                                      </div>
+                                      <div class="card-content">
+                                          <h3> {{this.true1}} </h3>
+                                          <h3 class="title">
+                                      <h2 style="color:red;"></h2>
+                                          <h4>Votes 4 Genuine</h4>
+                                          </h3>
+                                      </div>
+                                  </div>
+                                </div>
+                                <div class="col-md-4">
+                                <div class="card card-stats">
+                                    <div class="card-header" data-background-color="red">
+                                        <i class="material-icons">warning</i>
+                                    </div>
+                                    <div class="card-content">
+                                        <h3> {{this.false1}} </h3>
+                                        <h3 class="title">
+                                    <h2 style="color:red;"></h2>
+                                        <h4>Votes 4 Fake</h4>
+                                        </h3>
+                                    </div>
+                                </div>
+                              </div>
+                              <div class="col-md-4">
+                              <div class="card card-stats">
+                                  <div class="card-header" data-background-color="orange">
+                                      <i class="material-icons">perm_device_information</i>
+                                  </div>
+                                  <div class="card-content">
+                                      <div>
+                                        <div class="div1"><h3>{{this.status}}</h3></div>
+                                        {{#is this.status "Verified - True"}}
+                                        <div class="div2" style="color:green"><i class="material-icons">check_circle</i></div>
+                                         {{else}}
+                                        <div class="div2" style="color:red"><i class="material-icons">warning</i></div>
+                                        {{/is}}
+                                      </div>
+                                  </div>
+                              </div>
+                            </div>
+                              </div>
+                                  <div class="row">
                                       <div class="col-md-4"></div>
                                       <div class="col-md-6">
                                           <div class="form-group label-floating">
@@ -124,12 +179,6 @@
                                           <div class="form-group label-floating">
                                               <h4  class="control-label" style="color:red;"><i class="material-icons">person</i></h4>
                                                 <h4 rel="tooltip" title="WriterName">{{ this.writer }}</h4>
-                                          </div>
-                                      </div>
-                                      <div class="col-md-2">
-                                          <div class="form-group label-floating">
-                                              <h4  class="control-label" style="color:red;"><i class="material-icons">hourglass_empty</i></h4>
-                                                <h4 rel="tooltip" title="Status">{{ this.status }}</h4>
                                           </div>
                                       </div>
                                       <div class="col-md-8">
