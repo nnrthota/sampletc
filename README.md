@@ -11,3 +11,7 @@ Download truthchain code and give command:  “npm install”
 Finall command is “node server” 
 
 Webapp will live at 7085 port access it through http://localhost:7085
+
+Signup code is 11421
+
+Truthchain is hosted in Digital Ocean (IaaS)  Please Visit http://truthchain.tk/
